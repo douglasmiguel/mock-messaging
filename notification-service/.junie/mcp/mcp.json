@@ -1,0 +1,11 @@
+{
+    "mcpServers": {
+        "laravel-boost": {
+            "command": "/opt/homebrew/Cellar/php/8.5.9/bin/php",
+            "args": [
+                "/Users/douglas.miguel/dev/mock-messaging/notification-service/artisan",
+                "boost:mcp"
+            ]
+        }
+    }
+}

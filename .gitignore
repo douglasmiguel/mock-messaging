@@ -1,0 +1,17 @@
+# Workspace-level local tooling
+/.idea/
+.DS_Store
+
+# Dependencies are restored from each service's lockfile.
+**/vendor/
+**/node_modules/
+
+# Local Laravel configuration, caches, logs, and generated assets.
+**/.env
+**/.env.backup
+**/.env.production
+**/.phpunit.result.cache
+**/.phpunit.cache/
+**/*.log
+**/public/build/
+**/public/hot

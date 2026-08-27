@@ -1,0 +1,18 @@
+{
+	"ulid": "01M110FCBPX0RNYPQ4Z2560R3V",
+	"minTime": 1787803394813,
+	"maxTime": 1787810400000,
+	"stats": {
+		"numSamples": 385623,
+		"numFloatSamples": 385623,
+		"numSeries": 335,
+		"numChunks": 3017
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01M110FCBPX0RNYPQ4Z2560R3V"
+		]
+	},
+	"version": 1
+}

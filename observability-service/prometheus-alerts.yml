@@ -1,0 +1,17 @@
+groups:
+  - name: mock-messaging
+    rules:
+      - alert: MockMessagingOutboxBacklog
+        expr: mock_messaging_order_service_outbox_oldest_pending_age_seconds > 60
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Transactional outbox has unpublished messages for more than one minute.
+      - alert: MockMessagingConsumerFailure
+        expr: time() - mock_messaging_consumer_last_failure_timestamp_seconds < 300
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: A Mock Messaging consumer has failed within the last five minutes.

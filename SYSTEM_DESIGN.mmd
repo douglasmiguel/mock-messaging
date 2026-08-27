@@ -1,0 +1,71 @@
+flowchart LR
+    subgraph clients["Users and Operators"]
+        apiClient["Order API Client"]
+        customer["Customer"]
+        restaurant["Restaurant"]
+        operator["Operations Admin"]
+    end
+
+    subgraph routing["Local Routing"]
+        herdProxy["Laravel Herd Reverse Proxy"]
+    end
+
+    subgraph applications["Application Services and Workers"]
+        orderService["Order Service"]
+        outboxPublisher["Outbox Publisher Scheduler"]
+        notificationService["Notification Service and Consumer"]
+        riderService["Rider Service and Consumer"]
+        observabilityService["Observability Service and Consumer"]
+    end
+
+    subgraph messaging["Event Backbone"]
+        rabbitMq["RabbitMQ Topic Exchange"]
+        notificationQueues["Notification Queue, Retry, DLQ"]
+        riderQueues["Rider Queue, Retry, DLQ"]
+        observabilityQueues["Observability Queue, Retry, DLQ"]
+    end
+
+    subgraph data["Service-Owned Data"]
+        orderDb["Order SQLite and Transactional Outbox"]
+        notificationDb["Notification SQLite"]
+        riderDb["Rider SQLite"]
+        observabilityDb["Observability SQLite"]
+    end
+
+    subgraph delivery["Notification Delivery"]
+        mailpit["Mailpit SMTP Inbox"]
+    end
+
+    subgraph monitoring["Monitoring"]
+        prometheus["Prometheus"]
+        grafana["Grafana Dashboards"]
+    end
+
+    apiClient -->|"HTTPS order commands"| herdProxy
+    customer -->|"Tokenized actions"| herdProxy
+    restaurant -->|"Tokenized actions"| herdProxy
+    operator -->|"Admin and dashboards"| herdProxy
+    herdProxy -->|"Order UI and API"| orderService
+    herdProxy -->|"Action-link UI"| notificationService
+    herdProxy -->|"Dashboard UI"| grafana
+
+    orderService -->|"Atomic order and event write"| orderDb
+    outboxPublisher -->|"Read pending outbox rows"| orderDb
+    outboxPublisher -.->|"Persistent publish with confirms"| rabbitMq
+    rabbitMq -.-> notificationQueues
+    rabbitMq -.-> riderQueues
+    rabbitMq -.-> observabilityQueues
+    notificationQueues -.->|"order.*"| notificationService
+    riderQueues -.->|"ready and delivered"| riderService
+    observabilityQueues -.->|"all events"| observabilityService
+
+    notificationService -->|"Snapshots, tokens, deliveries"| notificationDb
+    riderService -->|"Riders and assignments"| riderDb
+    observabilityService -->|"Events, projections, health"| observabilityDb
+    notificationService -.->|"SMTP"| mailpit
+    notificationService -->|"Restaurant and client state commands"| orderService
+    riderService -->|"Rider assignment command"| orderService
+
+    orderService -->|"Business metrics"| prometheus
+    observabilityService -->|"Event and consumer metrics"| prometheus
+    prometheus -->|"PromQL results"| grafana

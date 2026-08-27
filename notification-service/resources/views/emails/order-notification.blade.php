@@ -1,0 +1,1 @@
+<h1>{{ $title }}</h1><p>{{ $messageText }}</p><p><a href="{{ $actionUrl }}" style="display:inline-block;padding:12px 18px;background:#175cd3;color:#fff;text-decoration:none;border-radius:6px">{{ $buttonLabel }}</a></p>

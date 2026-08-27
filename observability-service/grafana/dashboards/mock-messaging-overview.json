@@ -1,0 +1,105 @@
+{
+  "annotations": { "list": [] },
+  "editable": false,
+  "panels": [
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 0, "y": 0 },
+      "id": 1,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (event_type) (mock_messaging_events_total)", "legendFormat": "{{event_type}}", "refId": "A" }
+      ],
+      "title": "Events observed by type",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "palette-classic" } }, "overrides": [] },
+      "gridPos": { "h": 9, "w": 12, "x": 12, "y": 0 },
+      "id": 2,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "showUnfilled": true },
+      "targets": [
+        { "expr": "mock_messaging_orders_by_status", "legendFormat": "{{status}}", "refId": "A" }
+      ],
+      "title": "Current orders by status",
+      "type": "bargauge"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "decimals", "value": 0 },
+              { "id": "unit", "value": "dateTimeAsLocal" },
+              { "id": "displayName", "value": "Last seen" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 9, "w": 24, "x": 0, "y": 9 },
+      "id": 3,
+      "options": { "showHeader": true, "sortBy": [] },
+      "targets": [
+        { "expr": "mock_messaging_events_last_seen_timestamp_seconds * 1000", "format": "table", "instant": true, "refId": "A" }
+      ],
+      "title": "Last observed event by type",
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "indexByName": {}, "renameByName": {} } }
+      ],
+      "type": "table"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] } }, "overrides": [] },
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 18 },
+      "id": 4,
+      "options": { "legend": { "displayMode": "list", "placement": "bottom", "showLegend": true }, "tooltip": { "mode": "multi" } },
+      "targets": [
+        { "expr": "sum by (service) (mock_messaging_consumer_retries_total)", "legendFormat": "{{service}} retries", "refId": "A" },
+        { "expr": "sum by (service) (mock_messaging_consumer_dead_letters_total)", "legendFormat": "{{service}} DLQ", "refId": "B" }
+      ],
+      "title": "Retries and dead-lettered messages",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "decimals", "value": 0 },
+              { "id": "unit", "value": "dateTimeAsLocal" },
+              { "id": "displayName", "value": "Observed at" }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 18 },
+      "id": 5,
+      "options": { "showHeader": true, "sortBy": [] },
+      "targets": [
+        { "expr": "label_replace(mock_messaging_consumer_last_success_timestamp_seconds, \"activity\", \"success\", \"__name__\", \".*\") * 1000 or label_replace(mock_messaging_consumer_last_failure_timestamp_seconds, \"activity\", \"failure\", \"__name__\", \".*\") * 1000", "format": "table", "instant": true, "refId": "A" }
+      ],
+      "title": "Consumer activity and last failure",
+      "transformations": [
+        { "id": "organize", "options": { "excludeByName": { "Time": true }, "indexByName": {}, "renameByName": {} } }
+      ],
+      "type": "table"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 41,
+  "tags": ["mock-messaging", "rabbitmq"],
+  "templating": { "list": [] },
+  "time": { "from": "now-15m", "to": "now" },
+  "title": "Mock Messaging Overview",
+  "uid": "mock-messaging-overview",
+  "version": 3
+}

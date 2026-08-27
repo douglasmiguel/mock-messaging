@@ -1,0 +1,18 @@
+{
+	"ulid": "01M10SKMC6QYEWSFX3X8219M26",
+	"minTime": 1787796192818,
+	"maxTime": 1787803200000,
+	"stats": {
+		"numSamples": 265990,
+		"numFloatSamples": 265990,
+		"numSeries": 335,
+		"numChunks": 2012
+	},
+	"compaction": {
+		"level": 1,
+		"sources": [
+			"01M10SKMC6QYEWSFX3X8219M26"
+		]
+	},
+	"version": 1
+}

@@ -1,0 +1,10 @@
+apiVersion: 1
+
+providers:
+  - name: Mock Messaging
+    folder: Mock Messaging
+    type: file
+    disableDeletion: true
+    editable: false
+    options:
+      path: /Users/douglas.miguel/dev/mock-messaging/observability-service/grafana/dashboards
