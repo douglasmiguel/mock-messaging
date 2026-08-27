@@ -42,6 +42,9 @@
             "npm install --ignore-scripts",
             "npm run build"
         ],
+        "ci": [
+            "composer install --no-interaction --prefer-dist --no-progress --optimize-autoloader"
+        ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
             "@php artisan dev"
