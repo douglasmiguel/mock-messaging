@@ -6,10 +6,7 @@
 
 The Observability Service listens to every event published to RabbitMQ, stores operational observations, and exposes Prometheus metrics. Prometheus and Grafana are configured here so the technical event flow and the Order Service business view can be explored locally.
 
-Local site: [https://observability-service.test](https://observability-service.test)  
-Metrics listener: `http://127.0.0.1:8081/metrics`  
-Prometheus: [https://prometheus.test](https://prometheus.test)  
-Grafana: [https://grafana.test](https://grafana.test)
+Local URLs depend on the selected development environment. The [Herd guide](../development/herd.md) uses the `*.test` URLs; the [Docker guide](../development/docker.md) exposes the service on port 8003, Prometheus on 9090, and Grafana on 3000.
 
 ## Data ownership
 
@@ -31,73 +28,47 @@ Events are deduplicated by event ID. Failures are retried three times and then d
 
 ## Local setup
 
+Follow either the [Herd guide](../development/herd.md) or the [Docker guide](../development/docker.md). For an independently installed PHP runtime, initialise this service from its directory:
+
 ```bash
-cd /Users/douglas.miguel/dev/mock-messaging/observability-service
+cd <repository>/observability-service
 composer install
 cp .env.example .env
 php artisan key:generate
+touch database/database.sqlite
 php artisan migrate --seed
 ```
 
-Configure local RabbitMQ values in `.env`. To reset only this service's data:
+Configure `RABBITMQ_*` values that can reach your local broker. To reset only this service's data:
 
 ```bash
 php artisan migrate:fresh --seed
 ```
 
-## Required Laravel processes
+## Required processes
 
-Start the event consumer:
+The consumer runs with:
 
 ```bash
 php artisan observability:consume
 ```
 
-Start the dedicated metrics listener that Prometheus scrapes:
+For the Herd approach, start the dedicated metrics listener that Prometheus scrapes:
 
 ```bash
 php artisan serve --host=127.0.0.1 --port=8081
 ```
 
-The metrics listener is intentionally separate from the Herd site because Prometheus is configured to scrape `127.0.0.1:8081`.
+Docker serves the same `/metrics` endpoint from the Observability Service container, so no separate listener is needed. The environment guides contain the matching Prometheus and Grafana setup.
 
-## Prometheus
+## Dashboards
 
-Start it with the repository configuration:
-
-```bash
-prometheus --config.file=/Users/douglas.miguel/dev/mock-messaging/observability-service/prometheus.yml --web.listen-address=127.0.0.1:9090
-```
-
-It scrapes this service every five seconds and the Order Service business metrics at `https://order-service.test/metrics/business`. For that HTTPS target to resolve from the Prometheus process, `/etc/hosts` needs:
-
-```text
-127.0.0.1 order-service.test
-```
-
-Restart Prometheus after changing `prometheus.yml`.
-
-## Grafana
-
-`grafana.ini` provisions the Prometheus datasource and the dashboards in `grafana/dashboards/`.
-
-```bash
-cd /Users/douglas.miguel/dev/mock-messaging/observability-service
-grafana server \
-  --config "$PWD/grafana.ini" \
-  --homepath "$(brew --prefix grafana)/share/grafana" \
-  --packaging=brew \
-  cfg:default.paths.data="$(brew --prefix)/var/lib/grafana" \
-  cfg:default.paths.logs="$(brew --prefix)/var/log/grafana" \
-  cfg:default.paths.plugins="$(brew --prefix)/var/lib/grafana/plugins"
-```
-
-Open [Grafana](https://grafana.test) and sign in with the local credentials currently configured on this machine. Two dashboards are available:
+Two provisioned Grafana dashboards are available:
 
 - **Mock Messaging Overview** — event volume, status projections, retries, DLQs, and consumer health.
 - **Order Service Business** — current orders by status and restaurant plus creation-date cohorts.
 
-Restart Grafana after changing provisioned datasource or dashboard files.
+The provisioning files use the `PROMETHEUS_URL` and `DASHBOARD_PATH` environment variables. The environment guides provide the correct values for both runtime options.
 
 ## Verification
 
@@ -105,4 +76,4 @@ Restart Grafana after changing provisioned datasource or dashboard files.
 php artisan test --compact
 ```
 
-For all processes required for an end-to-end test, see the [root runbook](../README.md).
+For all processes required for an end-to-end test, see the [root guide](../README.md).

@@ -6,8 +6,7 @@
 
 The Notification Service consumes order events, records notification deliveries, and sends local emails through Mailpit. It owns user-facing action links for restaurant confirmation/refusal/ready actions and client cancellation or issue actions.
 
-Local site: [https://notification-service.test](https://notification-service.test)  
-Email inbox: [http://localmail.test](http://localmail.test)
+Local URLs depend on the selected development environment. The [Herd guide](../development/herd.md) uses `https://notification-service.test` and `http://localmail.test`; the [Docker guide](../development/docker.md) uses `http://localhost:8001` and `http://localhost:8025`.
 
 ## Data ownership
 
@@ -40,7 +39,7 @@ Failures are retried up to three times. A fourth failed attempt is routed to the
 ## Local setup
 
 ```bash
-cd /Users/douglas.miguel/dev/mock-messaging/notification-service
+cd <repository>/notification-service
 composer install
 cp .env.example .env
 php artisan key:generate
@@ -50,8 +49,8 @@ php artisan migrate --seed
 Set these values in `.env`:
 
 - RabbitMQ connection details (`RABBITMQ_*`).
-- `MAIL_MAILER=smtp`, `MAIL_HOST=127.0.0.1`, and `MAIL_PORT=1025` for Mailpit.
-- `ORDER_SERVICE_URL=https://order-service.test`.
+- `MAIL_MAILER=smtp`, plus the Mailpit host and port reachable from this service.
+- `ORDER_SERVICE_URL`, set to the URL reachable from this service's runtime (see the environment guide).
 - `LOCAL_SERVICE_KEY`, identical to the Order Service value.
 
 To reset only this service's local data:
@@ -74,4 +73,4 @@ Use `--once` to consume a single message during debugging. The consumer must rem
 php artisan test --compact
 ```
 
-For all processes required for an end-to-end test, see the [root runbook](../README.md).
+For all processes required for an end-to-end test, see the [root guide](../README.md).

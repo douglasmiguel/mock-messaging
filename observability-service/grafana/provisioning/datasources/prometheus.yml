@@ -9,7 +9,7 @@ datasources:
     uid: prometheus
     type: prometheus
     access: proxy
-    url: http://127.0.0.1:9090
+    url: ${PROMETHEUS_URL}
     orgId: 1
     version: 1
     isDefault: true

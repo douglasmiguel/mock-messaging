@@ -6,7 +6,7 @@
 
 The Rider Service owns rider availability and assignments. When an order is ready for pickup, it selects an available rider, stores an assignment, and tells the Order Service which external rider ID was assigned.
 
-Local site: [https://rider-service.test](https://rider-service.test)
+The local URL depends on the selected development environment: the [Herd guide](../development/herd.md) uses `https://rider-service.test`, while the [Docker guide](../development/docker.md) uses `http://localhost:8002`.
 
 ## Data ownership
 
@@ -36,14 +36,14 @@ The consumer retries failures three times; the next failed attempt goes to the D
 ## Local setup
 
 ```bash
-cd /Users/douglas.miguel/dev/mock-messaging/rider-service
+cd <repository>/rider-service
 composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
 ```
 
-Set `RABBITMQ_*`, `ORDER_SERVICE_URL=https://order-service.test`, and a `LOCAL_SERVICE_KEY` that matches the Order Service.
+Set `RABBITMQ_*`, an `ORDER_SERVICE_URL` reachable from this service's runtime, and a `LOCAL_SERVICE_KEY` that matches the Order Service. The environment guides provide the Herd and Docker values.
 
 The seed provides 20 riders. To reset this service's database:
 
@@ -65,4 +65,4 @@ Use `--once` to consume a single message while debugging. Leave the normal consu
 php artisan test --compact
 ```
 
-For all processes required for an end-to-end test, see the [root runbook](../README.md).
+For all processes required for an end-to-end test, see the [root guide](../README.md).

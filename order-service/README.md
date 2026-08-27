@@ -6,7 +6,7 @@
 
 The Order Service is the source of truth for restaurant orders. It creates order records, records domain events in a transactional outbox, and exposes the public, admin, internal, and business-metrics endpoints.
 
-Local site: [https://order-service.test](https://order-service.test)
+The local URL depends on the selected development environment: the [Herd guide](../development/herd.md) uses `https://order-service.test`, while the [Docker guide](../development/docker.md) uses `http://localhost:8000`.
 
 ## Data ownership
 
@@ -47,14 +47,14 @@ The scheduler runs `outbox:publish` every second. Publisher confirms are awaited
 ## Local setup
 
 ```bash
-cd /Users/douglas.miguel/dev/mock-messaging/order-service
+cd <repository>/order-service
 composer install
 cp .env.example .env
 php artisan key:generate
 php artisan migrate --seed
 ```
 
-Set `RABBITMQ_*` values in `.env` for the local broker and configure the same `LOCAL_SERVICE_KEY` that the Notification and Rider Services use. The expected application URL is `https://order-service.test`.
+Set `RABBITMQ_*` values in `.env` for the local broker and configure the same `LOCAL_SERVICE_KEY` that the Notification and Rider Services use. Set `APP_URL` to the Order Service URL for your selected environment.
 
 To reset local data, use the destructive command:
 
@@ -102,4 +102,4 @@ It creates a balanced spread of all current order statuses, records the lifecycl
 php artisan test --compact
 ```
 
-For the complete system restart order, see the [root runbook](../README.md).
+For the complete system startup order, see the [root guide](../README.md).

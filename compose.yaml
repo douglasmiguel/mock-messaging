@@ -1,4 +1,179 @@
 services:
+  order-service:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      RABBITMQ_HOST: rabbitmq
+      LOCAL_SERVICE_KEY: mock-messaging-local-key
+    volumes:
+      - ./order-service:/var/www
+      - order-service-vendor:/var/www/vendor
+    ports:
+      - "8000:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  order-scheduler:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan schedule:work"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8000
+      RABBITMQ_HOST: rabbitmq
+      LOCAL_SERVICE_KEY: mock-messaging-local-key
+    volumes:
+      - ./order-service:/var/www
+      - order-service-vendor:/var/www/vendor
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8001
+      RABBITMQ_HOST: rabbitmq
+      ORDER_SERVICE_URL: http://order-service:8000
+      LOCAL_SERVICE_KEY: mock-messaging-local-key
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    volumes:
+      - ./notification-service:/var/www
+      - notification-service-vendor:/var/www/vendor
+    ports:
+      - "8001:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  notification-consumer:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan notifications:consume"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8001
+      RABBITMQ_HOST: rabbitmq
+      ORDER_SERVICE_URL: http://order-service:8000
+      LOCAL_SERVICE_KEY: mock-messaging-local-key
+      MAIL_MAILER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+    volumes:
+      - ./notification-service:/var/www
+      - notification-service-vendor:/var/www/vendor
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  rider-service:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8002
+      RABBITMQ_HOST: rabbitmq
+      ORDER_SERVICE_URL: http://order-service:8000
+      LOCAL_SERVICE_KEY: mock-messaging-local-key
+    volumes:
+      - ./rider-service:/var/www
+      - rider-service-vendor:/var/www/vendor
+    ports:
+      - "8002:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  rider-consumer:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan riders:consume"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8002
+      RABBITMQ_HOST: rabbitmq
+      ORDER_SERVICE_URL: http://order-service:8000
+      LOCAL_SERVICE_KEY: mock-messaging-local-key
+    volumes:
+      - ./rider-service:/var/www
+      - rider-service-vendor:/var/www/vendor
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  observability-service:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan serve --host=0.0.0.0 --port=8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://localhost:8003
+      RABBITMQ_HOST: rabbitmq
+    volumes:
+      - ./observability-service:/var/www
+      - observability-service-vendor:/var/www/vendor
+    ports:
+      - "8003:8000"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  observability-consumer:
+    build:
+      context: .
+      dockerfile: development/docker/Dockerfile
+    working_dir: /var/www
+    command: sh -c "composer install --no-interaction --prefer-dist && php artisan observability:consume"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      RABBITMQ_HOST: rabbitmq
+    volumes:
+      - ./observability-service:/var/www
+      - observability-service-vendor:/var/www/vendor
+    restart: unless-stopped
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
   rabbitmq:
     image: rabbitmq:4-management
     ports:
@@ -22,11 +197,29 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./observability-service/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./development/docker/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./observability-service/prometheus-alerts.yml:/etc/prometheus/prometheus-alerts.yml:ro
+    depends_on:
+      order-service:
+        condition: service_started
+      observability-service:
+        condition: service_started
 
   grafana:
     image: grafana/grafana:12.1.0
+    environment:
+      PROMETHEUS_URL: http://prometheus:9090
+      DASHBOARD_PATH: /etc/grafana/provisioning/dashboards
     ports:
       - "3000:3000"
     volumes:
       - ./observability-service/grafana:/etc/grafana/provisioning:ro
+    depends_on:
+      prometheus:
+        condition: service_started
+
+volumes:
+  order-service-vendor:
+  notification-service-vendor:
+  rider-service-vendor:
+  observability-service-vendor:
